@@ -13,12 +13,12 @@ REDIS_PORT = 6379
 REDIS_CACHE_TTL = 3600  # Время жизни кэша (1 час)
 
 # URL вашего Django API
-DJANGO_API_URL = "http://127.0.0.1:8000/api/v1/get-data-casino/{pk}/"
+DJANGO_API_URL = "http://127.0.0.1:8000/api/v1/get-data-casino/{name}/"
 
 
 # Pydantic модель для ответа
 class CasinoResponse(BaseModel):
-    pk: int
+    name: str
     data: dict
 
 
@@ -37,10 +37,10 @@ app = FastAPI(lifespan=lifespan)
 
 
 # Асинхронная функция для получения данных из Django
-async def fetch_data_from_django(pk: int):
+async def fetch_data_from_django(name: str):
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(DJANGO_API_URL.format(pk=pk), timeout=10.0)
+            response = await client.get(DJANGO_API_URL.format(name=name), timeout=10.0)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
@@ -53,19 +53,19 @@ async def fetch_data_from_django(pk: int):
 
 
 # Эндпоинт для клиента
-@app.get("/_api/v1/get-data-casino/{pk}/", response_model=CasinoResponse)
-async def get_data_casino(pk: int):
+@app.get("/_api/v1/get-data-casino/{name}/", response_model=CasinoResponse)
+async def get_data_casino(name: str):
     redis_client: Redis = app.state.redis_client
 
     # Проверяем данные в Redis
-    cached_data = await redis_client.get(f"casino:{pk}")
+    cached_data = await redis_client.get(f"casino:{name}")
     if cached_data:
-        return {"pk": pk, "data": json.loads(cached_data)}
+        return {"name": name, "data": json.loads(cached_data)}
 
     # Если данных нет в кэше, загружаем их из Django
-    data = await fetch_data_from_django(pk)
+    data = await fetch_data_from_django(name)
 
     # Сохраняем данные в Redis с установленным временем жизни
-    await redis_client.setex(f"casino:{pk}", REDIS_CACHE_TTL, json.dumps(data))
+    await redis_client.setex(f"casino:{name}", REDIS_CACHE_TTL, json.dumps(data))
 
-    return {"pk": pk, "data": data}
+    return {"name": name, "data": data}
