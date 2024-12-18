@@ -1,0 +1,69 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+.nox/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and debug output
+*.log
+*.out
+*.err
+
+# FastAPI specific
+instance/
+*.db
+*.sqlite3
+
+# Docker
+*.env
+docker-compose.override.yml
+
+# MyPy
+.mypy_cache/
+
+# Bandit security linter
+.bandit/
+
+# Coverage tool output
+.coverage
+coverage.xml
+
+# Local testing files
+local.env
+local.settings.json
+
+# Deployment
+*.pem
+*.crt
+*.key
+
+# MacOS
+.DS_Store
+
