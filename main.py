@@ -13,7 +13,7 @@ REDIS_PORT = 6379
 REDIS_CACHE_TTL = 3600  # Время жизни кэша (1 час)
 
 # URL вашего Django API
-DJANGO_API_URL = "http://127.0.0.1:8000/api/v1/get-data-casino/{name}/"
+DJANGO_API_URL = "http://127.0.0.1/api/v1/get-data-casino/{name}/"
 
 
 # Pydantic модель для ответа
