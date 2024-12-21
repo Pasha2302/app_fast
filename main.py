@@ -41,7 +41,7 @@ app = FastAPI(lifespan=lifespan)
 async def fetch_data_from_django(pk: int):
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(DJANGO_API_URL.format(name=pk), timeout=10.0)
+            response = await client.get(DJANGO_API_URL.format(id=pk), timeout=10.0)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
