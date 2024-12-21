@@ -14,12 +14,12 @@ REDIS_CACHE_TTL = 3600  # Время жизни кэша (1 час)
 
 # URL вашего Django API
 # DJANGO_API_URL = "http://127.0.0.1/api/v1/get-data-casino/{name}/"
-DJANGO_API_URL = "https://adm.incasinowetrust.com/api/v1/get-data-casino/{name}/"
+DJANGO_API_URL = "https://adm.incasinowetrust.com/api/v1/get-data-casino/{id}/"
 
 
 # Pydantic модель для ответа
 class CasinoResponse(BaseModel):
-    name: str
+    name: int
     data: dict
 
 
@@ -38,10 +38,10 @@ app = FastAPI(lifespan=lifespan)
 
 
 # Асинхронная функция для получения данных из Django
-async def fetch_data_from_django(name: str):
+async def fetch_data_from_django(pk: int):
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(DJANGO_API_URL.format(name=name), timeout=10.0)
+            response = await client.get(DJANGO_API_URL.format(name=pk), timeout=10.0)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
@@ -54,19 +54,19 @@ async def fetch_data_from_django(name: str):
 
 
 # Эндпоинт для клиента
-@app.get("/_api/v1/get-data-casino/{name}/", response_model=CasinoResponse)
-async def get_data_casino(name: str):
+@app.get("/_api/v1/get-data-casino/{pk}/")
+async def get_data_casino(pk: int):
     redis_client: Redis = app.state.redis_client
 
     # Проверяем данные в Redis
-    cached_data = await redis_client.get(f"casino:{name}")
+    cached_data = await redis_client.get(f"casino:{pk}")
     if cached_data:
-        return {"name": name, "data": json.loads(cached_data)}
+        return json.loads(cached_data)
 
     # Если данных нет в кэше, загружаем их из Django
-    data = await fetch_data_from_django(name)
+    data = await fetch_data_from_django(pk)
 
     # Сохраняем данные в Redis с установленным временем жизни
-    await redis_client.setex(f"casino:{name}", REDIS_CACHE_TTL, json.dumps(data))
+    await redis_client.setex(f"casino:{pk}", REDIS_CACHE_TTL, json.dumps(data))
 
-    return {"name": name, "data": data}
+    return data
